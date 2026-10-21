@@ -1,0 +1,22 @@
+[
+  {
+    "id": "vis_1792573961849_lrr5t",
+    "ip": "127.0.0.1",
+    "timestamp": "21 Oct 2026, 2:42:41 pm IST (2026-10-21T09:12:41.845Z)",
+    "country": "Localhost",
+    "region": "Development",
+    "city": "Local Environment / AI Studio",
+    "postalCode": "N/A",
+    "isp": "Cloud Runtime",
+    "timezone": "UTC",
+    "referrer": "Direct Visit",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.8059.12 Safari/537.36",
+    "deviceType": "Desktop",
+    "browser": "Chrome",
+    "screenResolution": "1280x720",
+    "language": "en-US",
+    "pagePath": "/",
+    "emailSent": false,
+    "emailError": "RESEND_API_KEY not configured in environment."
+  }
+]

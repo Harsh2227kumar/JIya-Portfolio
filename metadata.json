@@ -1,0 +1,6 @@
+{
+  "name": "Jiya-Portfolio",
+  "description": "Portfolio website for Jiya Baghel - AI/ML Student, Python Developer & Aspiring Software Engineer with visitor analytics, project showcases, and secure contact notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
