@@ -1,40 +1,36 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { PortfolioData } from '../types/portfolio.ts';
+import { portfolioData as initialPortfolioData } from '../../server/portfolioData.ts';
 
 interface PortfolioContextType {
-  data: PortfolioData | null;
+  data: PortfolioData;
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
 }
 
 const PortfolioContext = createContext<PortfolioContextType>({
-  data: null,
-  loading: true,
+  data: initialPortfolioData,
+  loading: false,
   error: null,
   refresh: async () => {},
 });
 
 export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<PortfolioData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<PortfolioData>(initialPortfolioData);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchPortfolio = async () => {
     try {
-      setLoading(true);
       const res = await fetch('/api/portfolio');
-      if (!res.ok) {
-        throw new Error(`Failed to load portfolio data (${res.status})`);
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+        setError(null);
       }
-      const json = await res.json();
-      setData(json);
-      setError(null);
     } catch (err: any) {
-      console.error('Error fetching portfolio data from backend:', err);
-      setError(err?.message || 'Failed to fetch portfolio data');
-    } finally {
-      setLoading(false);
+      console.warn('Portfolio sync notice:', err?.message);
     }
   };
 

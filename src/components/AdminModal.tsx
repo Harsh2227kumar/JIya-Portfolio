@@ -30,6 +30,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'visitors' | 'messages' | 'analytics' | 'setup'>('visitors');
   const [testEmailLoading, setTestEmailLoading] = useState(false);
   const [testEmailStatus, setTestEmailStatus] = useState<string | null>(null);
+  const [keyInput, setKeyInput] = useState('');
+  const [emailInput, setEmailInput] = useState('jiyab623@gmail.com');
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showKeyConfig, setShowKeyConfig] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +109,38 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setTestEmailStatus(`Error: ${err.message}`);
     } finally {
       setTestEmailLoading(false);
+    }
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+    setSaveLoading(true);
+    setSaveStatus(null);
+    try {
+      const res = await fetch('/api/admin/save-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          resendApiKey: keyInput,
+          notificationEmail: emailInput,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSaveStatus({ type: 'success', message: 'API key saved and activated successfully!' });
+        setShowKeyConfig(false);
+        fetchStats(token);
+      } else {
+        setSaveStatus({ type: 'error', message: data.message || 'Failed to save configuration' });
+      }
+    } catch (err: any) {
+      setSaveStatus({ type: 'error', message: err.message || 'Network error' });
+    } finally {
+      setSaveLoading(false);
     }
   };
 
@@ -267,31 +304,105 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Test Resend Action Banner */}
-            <div className="p-4 rounded-2xl bg-sky-950/40 border border-sky-500/30 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="space-y-0.5">
-                <div className="font-semibold text-white flex items-center gap-1.5">
-                  <Send className="w-3.5 h-3.5 text-sky-400" />
-                  Resend Email Dispatch Target: <span className="font-mono text-sky-300">{stats?.targetEmail}</span>
+            {/* Resend Configuration & Test Banner */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-700/80 space-y-4 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="font-semibold text-white flex items-center gap-2 text-sm">
+                    <Key className="w-4 h-4 text-sky-400" />
+                    <span>Resend Service Integration</span>
+                    {stats?.resendConfigured ? (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800 text-[11px] font-mono">
+                        Active & Connected
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-800 text-[11px] font-mono">
+                        API Key Required
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-slate-400">
+                    Dispatches live visitor IP, geolocation (city/country/ISP), and contact messages directly to{' '}
+                    <span className="font-mono text-sky-300 font-semibold">{stats?.targetEmail || 'jiyab623@gmail.com'}</span>.
+                  </div>
                 </div>
-                <div className="text-slate-400">
-                  Sends visitor IP, city, region, country, and device alerts directly to your Gmail inbox.
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowKeyConfig(!showKeyConfig)}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs transition-colors border border-slate-600"
+                  >
+                    {showKeyConfig ? 'Cancel' : stats?.resendConfigured ? 'Update Key' : 'Configure Resend Key'}
+                  </button>
+
+                  <button
+                    onClick={handleSendTestEmail}
+                    disabled={testEmailLoading}
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-90 text-white font-semibold text-xs flex items-center gap-1.5 transition-opacity disabled:opacity-50"
+                  >
+                    {testEmailLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    <span>Test Resend Dispatch</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleSendTestEmail}
-                  disabled={testEmailLoading}
-                  className="px-3.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-semibold flex items-center gap-1.5 transition-colors"
+              {/* Collapsible Key Entry Form */}
+              {(showKeyConfig || !stats?.resendConfigured) && (
+                <form
+                  onSubmit={handleSaveConfig}
+                  className="p-4 rounded-xl bg-slate-950/80 border border-sky-500/30 space-y-3"
                 >
-                  {testEmailLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  Test Resend Dispatch
-                </button>
-              </div>
+                  <div className="text-xs font-semibold text-sky-300 flex items-center justify-between">
+                    <span>Enter your Resend API Key</span>
+                    <a
+                      href="https://resend.com/api-keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-400 hover:text-white underline text-[11px]"
+                    >
+                      Get a free key at resend.com ↗
+                    </a>
+                  </div>
+
+                  <div className="grid sm:grid-cols-12 gap-3">
+                    <div className="sm:col-span-8">
+                      <input
+                        type="password"
+                        placeholder="re_xxxxxxxxxxxxxxxxx"
+                        value={keyInput}
+                        onChange={(e) => setKeyInput(e.target.value)}
+                        required
+                        className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:outline-none focus:border-sky-500 placeholder:text-slate-600"
+                      />
+                    </div>
+                    <div className="sm:col-span-4">
+                      <button
+                        type="submit"
+                        disabled={saveLoading || !keyInput.trim()}
+                        className="w-full py-2 px-3 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        {saveLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                        <span>Save & Activate</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {saveStatus && (
+                    <div
+                      className={`p-2.5 rounded-lg text-xs font-mono ${
+                        saveStatus.type === 'success'
+                          ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
+                          : 'bg-rose-950/80 text-rose-300 border border-rose-800'
+                      }`}
+                    >
+                      {saveStatus.message}
+                    </div>
+                  )}
+                </form>
+              )}
 
               {testEmailStatus && (
-                <div className="w-full text-xs font-mono p-2 rounded bg-slate-900 border border-slate-700 text-slate-300">
+                <div className="w-full text-xs font-mono p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
                   {testEmailStatus}
                 </div>
               )}

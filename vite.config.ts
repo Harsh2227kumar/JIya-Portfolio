@@ -5,7 +5,18 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'api-server-middleware',
+        configureServer(server) {
+          import('./server/apiHandler.ts').then(({ apiRouter }) => {
+            server.middlewares.use('/api', apiRouter as any);
+          });
+        },
+      },
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

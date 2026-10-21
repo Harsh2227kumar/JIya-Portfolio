@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PortfolioProvider, usePortfolio } from './context/PortfolioContext.tsx';
+import { PortfolioProvider } from './context/PortfolioContext.tsx';
 import { Navbar } from './components/Navbar.tsx';
 import { Hero } from './components/Hero.tsx';
 import { About } from './components/About.tsx';
@@ -12,10 +12,8 @@ import { ResumeModal } from './components/ResumeModal.tsx';
 import { PrivacyModal } from './components/PrivacyModal.tsx';
 import { AdminModal } from './components/AdminModal.tsx';
 import { VisitorTracker } from './components/VisitorTracker.tsx';
-import { Loader2 } from 'lucide-react';
 
 function PortfolioMain() {
-  const { loading, error } = usePortfolio();
   const [resumeOpen, setResumeOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -40,21 +38,6 @@ function PortfolioMain() {
 
       {/* Main Content Area */}
       <main className="flex-1 relative z-10">
-        {loading && (
-          <div className="fixed top-20 right-6 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900/90 border border-sky-500/30 text-sky-400 text-xs shadow-lg backdrop-blur-md">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            <span>Loading dynamic profile...</span>
-          </div>
-        )}
-
-        {error && (
-          <div className="max-w-7xl mx-auto px-4 pt-24">
-            <div className="p-4 rounded-xl bg-amber-950/40 border border-amber-600/30 text-amber-200 text-xs">
-              Backend sync note: {error}. Falling back to cached state.
-            </div>
-          </div>
-        )}
-
         <Hero onOpenResume={() => setResumeOpen(true)} />
         <About />
         <Skills />
