@@ -63,22 +63,25 @@ export const Contact: React.FC = () => {
         body: JSON.stringify(formData),
       });
 
-      const result = await res.json();
+      let result: any = null;
+      try {
+        result = await res.json();
+      } catch {
+        result = null;
+      }
 
-      if (!res.ok) {
-        if (result.errors) {
-          setErrors(result.errors);
+      if (res.ok && result?.success) {
+        if (result.emailError) {
+          setStatusMessage({
+            type: 'success',
+            text: `Message recorded! (Note for portfolio owner: ${result.emailError})`,
+          });
         } else {
           setStatusMessage({
-            type: 'error',
-            text: result.message || 'Submission failed. Please try again.',
+            type: 'success',
+            text: 'Thank you! Your message was sent securely to Jiya Baghel. An automated confirmation was dispatched.',
           });
         }
-      } else {
-        setStatusMessage({
-          type: 'success',
-          text: 'Thank you! Your message was sent securely to Jiya Baghel. An automated confirmation was dispatched.',
-        });
         setFormData({
           name: '',
           email: '',
@@ -86,11 +89,23 @@ export const Contact: React.FC = () => {
           consent: false,
           honeypot: '',
         });
+      } else {
+        if (result?.errors) {
+          setErrors(result.errors);
+        } else {
+          const errMsg = result?.message || (res.status === 404
+            ? 'The /api/contact endpoint is not active on this host. You can send your message directly via email below.'
+            : 'Unable to submit message at this moment. You can send it directly via email below.');
+          setStatusMessage({
+            type: 'error',
+            text: errMsg,
+          });
+        }
       }
     } catch (err: any) {
       setStatusMessage({
         type: 'error',
-        text: 'Network error occurred while submitting message. Please check your connection.',
+        text: 'Connection to backend API failed. Please click below to send your message directly to jiyab623@gmail.com.',
       });
     } finally {
       setSubmitting(false);
@@ -221,7 +236,24 @@ export const Contact: React.FC = () => {
                 ) : (
                   <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
                 )}
-                <div>{statusMessage.text}</div>
+                <div className="space-y-2">
+                  <div>{statusMessage.text}</div>
+                  {statusMessage.type === 'error' && (
+                    <div>
+                      <a
+                        href={`mailto:jiyab623@gmail.com?subject=Portfolio%20Inquiry%20from%20${encodeURIComponent(
+                          formData.name || 'Visitor'
+                        )}&body=${encodeURIComponent(
+                          formData.message ? `${formData.message}\n\nFrom: ${formData.name} (${formData.email})` : ''
+                        )}`}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition-colors shadow"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Send Directly via Email App to jiyab623@gmail.com</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
